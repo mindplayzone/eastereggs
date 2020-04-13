@@ -81,7 +81,7 @@ COPY ./docker/webserver/conf/supervisord.conf /etc/supervisord.conf
 
 RUN mkdir /var/run/php-fpm/ && chmod 755 /var/run/php-fpm/
 
-WORKDIR /var/www/easteregss
+WORKDIR /var/www/eastereggs
 
 CMD ["/usr/bin/supervisord"]
 
