@@ -8,6 +8,7 @@ services:
     hostname: eastereggs.test
     ports:
       - 8099:80
+      - 3000:3000
     volumes:
       - ./www/:/var/www/eastereggs/
     networks:
