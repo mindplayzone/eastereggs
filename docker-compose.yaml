@@ -1,0 +1,57 @@
+version: '3.7'
+services:
+  webserver:
+    build:
+      context: .
+      dockerfile: ./docker/webserver/Dockerfile
+    container_name: easter_webserver
+    hostname: eastereggs.test
+    ports:
+      - 8099:80
+    volumes:
+      - ./www/:/var/www/eastereggs/
+    networks:
+      easter-network:
+        ipv4_address: 10.1.0.10
+  database:
+    image: mariadb:10.4.12
+    container_name: easter_database
+    ports:
+      - 3366:3306
+    networks:
+      easter-network:
+        ipv4_address: 10.1.0.20
+    environment:
+      - MYSQL_USER=easter
+      - MYSQL_PASSWORD=easter
+      - MYSQL_ROOT_PASSWORD=easter-root
+    entrypoint:
+        sh -c "
+        echo 'CREATE DATABASE IF NOT EXISTS eastereggs; GRANT ALL PRIVILEGES ON eastereggs.* TO '\''easter'\''@'\''%'\''; ' > /docker-entrypoint-initdb.d/init.sql;
+        echo 'CREATE DATABASE IF NOT EXISTS eastereggs_testing; GRANT ALL PRIVILEGES ON eastereggs_testing.* TO '\''easter'\''@'\''%'\''; ' >> /docker-entrypoint-initdb.d/init.sql;
+        /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
+        "
+    volumes:
+        - database-volume:/var/lib/mysql
+  selenium:
+    image: selenium/standalone-chrome
+    container_name: easter_selenium
+    depends_on:
+      - webserver
+    links:
+      - webserver:eastereggs.test
+    ports:
+      - 4444:4444
+    networks:
+      easter-network:
+        ipv4_address: 10.1.0.30
+volumes:
+  database-volume:
+    driver: local
+networks:
+  easter-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.1.0.0/24
